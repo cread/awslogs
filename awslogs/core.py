@@ -66,7 +66,7 @@ class AWSLogs(object):
         """Returns streams in ``group`` matching ``pattern``."""
         pattern = '.*' if pattern == self.ALL_WILDCARD else pattern
         reg = re.compile('^{0}'.format(pattern))
-        for stream in self.get_streams(group):
+        for stream in self.get_streams(group, pattern):
             if re.match(reg, stream):
                 yield stream
 
@@ -218,9 +218,11 @@ class AWSLogs(object):
             for group in page.get('logGroups', []):
                 yield group['logGroupName']
 
-    def get_streams(self, log_group_name=None):
+    def get_streams(self, log_group_name=None, prefix=None):
         """Returns available CloudWatch logs streams in ``log_group_name``."""
         kwargs = {'logGroupName': log_group_name or self.log_group_name}
+        if prefix and prefix != '.*':
+            kwargs['logStreamNamePrefix'] = prefix
         window_start = self.start or 0
         window_end = self.end or sys.float_info.max
 
